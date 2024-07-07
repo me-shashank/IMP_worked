@@ -1,0 +1,3077 @@
+MiNiFi Config Version: 3
+Flow Controller:
+  name: s2h_oracle_containerized_dev_user_v1.0.13
+  comment: In CSV writer service, updated the escape character to Alt 170 sequence.
+Core Properties:
+  flow controller graceful shutdown period: 10 sec
+  flow service write delay interval: 500 ms
+  administrative yield duration: 30 sec
+  bored yield duration: 10 millis
+  max concurrent threads: 1
+  variable registry properties: ''
+FlowFile Repository:
+  partitions: 256
+  checkpoint interval: 2 mins
+  always sync: false
+  Swap:
+    threshold: 20000
+    in period: 5 sec
+    in threads: 1
+    out period: 5 sec
+    out threads: 4
+Content Repository:
+  content claim max appendable size: 10 MB
+  content claim max flow files: 100
+  always sync: false
+Provenance Repository:
+  provenance rollover time: 1 min
+  implementation: org.apache.nifi.provenance.MiNiFiPersistentProvenanceRepository
+Component Status Repository:
+  buffer size: 1440
+  snapshot frequency: 1 min
+Security Properties:
+  keystore: ''
+  keystore type: ''
+  keystore password: ''
+  key password: ''
+  truststore: ''
+  truststore type: ''
+  truststore password: ''
+  ssl protocol: ''
+  Sensitive Props:
+    key: null
+    algorithm: PBEWITHMD5AND256BITAES-CBC-OPENSSL
+    provider: BC
+Processors:
+- id: 55d63857-b629-38a3-0000-000000000000
+  name: CaptureFailureEncryptEvent
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    event: FILE-ENCRYPT
+    failedTimestamp: ${encrypt.failedtime:format("yyyy-MM-dd HH:mm:ss")}
+    fileName: ${filename}
+    startTime: ${encrypt.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    statusInfo: ${sourceObjectName} split number ${fragment.index} failed encryption
+- id: 1659b108-90ad-3add-0000-000000000000
+  name: ConsumeGCPubSub
+  class: org.apache.nifi.processors.gcp.pubsub.ConsumeGCPubSub
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    GCP Credentials Provider Service: 0e9e49b2-54e4-36bf-0000-000000000000
+    gcp-project-id: GCP_PROJECT_ID_PUBSUB
+    gcp-pubsub-publish-batch-size: '1'
+    gcp-pubsub-subscription: ear-aa-8-cim-daily-full-load-low-volume-subscription
+- id: 7417aa73-a4ce-35e0-0000-000000000000
+  name: CreateAuditEntry
+  class: org.apache.nifi.processors.standard.AttributesToJSON
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Attributes List: id,ssrId,systemName,scheduleGroupSchedule,scheduleGroup,sourceDbType,sourceObjectName,sourceDatabaseName,sourceSchemaName,sourceDataKey,sourceChangeLogIdentifier,activeFlag,tableSchedule,fullFilterCondition,nullColList,incrFilterCondition,ingestionOrder,runtimeColumnLinking,selectColumnList,createdDatetime,ingestionType,totalDispatchedMessages,volumeCategory,dispatchTime,tableNameOverride
+    Destination: flowfile-attribute
+    Include Core Attributes: 'true'
+    Null Value: 'false'
+    attributes-to-json-regex: null
+- id: ee310d4b-0960-301e-0000-000000000000
+  name: CreateAuditEntry
+  class: org.apache.nifi.processors.standard.AttributesToJSON
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Attributes List: id,ssrId,systemName,scheduleGroupSchedule,scheduleGroup,sourceDbType,sourceObjectName,sourceDatabaseName,sourceSchemaName,sourceDataKey,sourceChangeLogIdentifier,activeFlag,tableSchedule,fullFilterCondition,nullColList,incrFilterCondition,ingestionOrder,runtimeColumnLinking,selectColumnList,createdDatetime,ingestionType,totalDispatchedMessages,volumeCategory,dispatchTime,tableNameOverride
+    Destination: flowfile-attribute
+    Include Core Attributes: 'true'
+    Null Value: 'false'
+    attributes-to-json-regex: null
+- id: fb0aa548-d819-34c4-0000-000000000000
+  name: CreateAuditEntry
+  class: org.apache.nifi.processors.standard.AttributesToJSON
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Attributes List: id,ssrId,systemName,scheduleGroupSchedule,scheduleGroup,sourceDbType,sourceObjectName,sourceDatabaseName,sourceSchemaName,sourceDataKey,sourceChangeLogIdentifier,activeFlag,tableSchedule,fullFilterCondition,nullColList,incrFilterCondition,ingestionOrder,runtimeColumnLinking,selectColumnList,createdDatetime,ingestionType,totalDispatchedMessages,volumeCategory,dispatchTime,tableNameOverride
+    Destination: flowfile-attribute
+    Include Core Attributes: 'true'
+    Null Value: 'false'
+    attributes-to-json-regex: null
+- id: 82d9d2c1-92df-303a-0000-000000000000
+  name: CreateColumnListWithCast
+  class: org.apache.nifi.processors.groovyx.ExecuteGroovyScript
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    groovyx-additional-classpath: null
+    groovyx-failure-strategy: rollback
+    groovyx-script-body: "flowFile = session.get()\nif(!flowFile) \nreturn\t\ndbType\
+      \ = flowFile.getAttribute('sourceDbType').toLowerCase()\n\nallColumns = flowFile.getAttribute('selectColumnList').split(\"\
+      ,\").collect {it.toString()}\nlog.info(\"allColumns : \"+allColumns)\n\nnonVarcharNonDateColsToString=\
+      \ flowFile.getAttribute('nonVarcharNonDateCols')\nlog.info(\"nonVarcharNonDateColsToString\
+      \ : \"+nonVarcharNonDateColsToString)\nif (nonVarcharNonDateColsToString ==\
+      \ null){\nnonVarcharNonDateColsToStringTrim =''\n}\nelse {\nnonVarcharNonDateColsToStringTrim\
+      \ = nonVarcharNonDateColsToString.substring(0, nonVarcharNonDateColsToString.lastIndexOf(\"\
+      ,\"))\nlog.info(\"nonVarcharNonDateColsToStringTrim : \"+nonVarcharNonDateColsToStringTrim)\n\
+      }\n\ndateCols = flowFile.getAttribute('onlyDateCols')\nlog.info(\"dateCols :\
+      \ \"+dateCols)\nif (dateCols == null){\ndateColsTrim =''\n}\nelse {\ndateColsTrim\
+      \ = dateCols.substring(0, dateCols.lastIndexOf(\",\"))\nlog.info(\"dateColsTrim\
+      \ : \"+dateColsTrim)\n}\n\nif (nonVarcharNonDateColsToStringTrim == ''){\n \
+      \   nonVarcharNonDateColsToStringTrimNvl=[]\n}\nelse {\nnonVarcharNonDateColsToStringTrimNvl\
+      \ = nonVarcharNonDateColsToStringTrim.split(\",\").collect {it.toString()}\n\
+      }\n\nif (dateColsTrim == ''){\n\tdateColsTrimList=[]\n}\nelse {\ndateColsTrimList\
+      \  = dateColsTrim.split(\",\").collect {it.toString()}\n}\n\nlog.info(\"nonVarcharNonDateColsToStringTrimNvl\
+      \ : \"+nonVarcharNonDateColsToStringTrimNvl)\nlog.info(\"dateColsTrimList:\"\
+      \ +dateColsTrimList)\n\ncolumnsNotEligibleForStringCastNvl = allColumns.minus(nonVarcharNonDateColsToStringTrimNvl).minus(dateColsTrimList)\n\
+      log.info(\"columnsNotEligibleForStringCastNvl : \"+columnsNotEligibleForStringCastNvl)\n\
+      \ndef castNvlColResult\nswitch(dbType){\n\tcase \"oracle\":\n\t\tif (nonVarcharNonDateColsToStringTrimNvl.isEmpty()){\
+      \ \n\t\t\tcastNvlColResult=\"\"\n\t\t}\n\t\telse{\n\t\tcastNvlColResult = nonVarcharNonDateColsToStringTrimNvl.collect\
+      \ { \"${it}\" }.join(\",\")\n\t\t}\n\t\t\n\t\tif(columnsNotEligibleForStringCastNvl.isEmpty()){\n\
+      \t\tcastWithoutNvlColResult = \"\"\n\t\t}\n\t\telse {\n\t\tcastWithoutNvlColResult\
+      \ = columnsNotEligibleForStringCastNvl.collect{\"${it}\"}.join(\",\")\n\t\t\
+      }\n\t\tif (dateColsTrimList.isEmpty()){\n\t\t\tnoCastNoNvlColResult =\"\"\n\t\
+      \t}\n\t\telse {\n\t\tnoCastNoNvlColResult = dateColsTrimList.collect{\"${it}\"\
+      }.join(\",\")\n\t\t}\n\t\tbreak\n}\nlog.info(\"castNvlColResult : \"+castNvlColResult)\n\
+      log.info(\"castNvlColResult : \"+castWithoutNvlColResult)\nattrMap = ['selectColumnListWithCastNvl':castNvlColResult,\
+      \ 'selectColumnListWithoutCastNvl':castWithoutNvlColResult,\n'selectDateColList':noCastNoNvlColResult]\n\
+      flowFile = session.putAllAttributes(flowFile, attrMap)\nsession.transfer(flowFile,\
+      \ REL_SUCCESS)"
+    groovyx-script-file: null
+- id: 7bf328d4-d71a-3857-0000-000000000000
+  name: CreateInsertQueryOthers
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    sqlInsert: INSERT INTO s2hingestionaudits.ingestion_audit_details(message_id,ssr_id,schedule_group,source_schema_name,source_database_name,source_object_name,table_name_override,enddate_time,startdate_time,process_start_time,cli_value,event,retry_iteration,status,status_info,total_dispatch_messages,volume_category,dispatch_time,table_record_count,file_record_count,split_record_count,total_split_count,split_number,minifi_gcp_instance,error_info,filename)
+      VALUES ('${gcp.pubsub.messageId}','${ssrId}','${scheduleGroup}','${sourceSchemaName}','${sourceDatabaseName}','${sourceObjectName}','${tableNameOverride}','${enddatetime}','${startdatetime}','${processstarttime}','${clivalue}','${event}','${retryCount}','${status}','${statusinfo}','${totalDispatchedMessages}','${volumeCategory}','${dispatchTime}','${executesql.row.count}','${record.count}','${text.line.count}','${fragment.count}','${fragment.index}','${gcp_instance_name}','${errorInfo}','${fileName}');
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>da7675d4-b20c-4b9a-9005-1af7f1fcec9f</id>\n        <name>checkRetryCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>7f93d07c-4cb1-4910-acfa-1d451ec6abf1</id>\n        <name>checkRowCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>record.count</attribute>\n\
+    \            <id>717ce75e-5291-4167-b413-78dcf86fa833</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${record.count:isEmpty()}</expression>\n\
+    \            <id>0bf151ba-0efb-4af6-b6fc-76d3fcb52ae0</id>\n        </conditions>\n\
+    \        <id>01247925-4d42-427a-8dd1-249c11b24d55</id>\n        <name>checkRecordCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>7a45696d-ea70-49f0-a54d-b80800b53716</id>\n        <name>checkSplitCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>7dca2372-de3a-4c33-b193-aaa96f39302f</id>\n        <name>checkTotalSplitisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>d17610ca-c12d-4548-b235-1be038357339</id>\n        <name>checkSplitNumberisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>${retryCount}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty():not()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>56bf8840-ee71-4116-8f1c-7ebe9f56773f</id>\n        <name>RetryNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>${executesql.row.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty():not()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>04654841-7a86-48eb-9aff-21c0398260be</id>\n        <name>RowCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>04a1702b-6168-4765-b37c-1f8b1bc762f4</id>\n        <name>RecordCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>921d588c-ad7a-451a-b6ee-47becd5198d3</id>\n        <name>SplitCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>${fragment.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty():not()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>e4afc0d9-9241-4332-a599-6f9ab4bbeb21</id>\n        <name>TotalSplitNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>${fragment.index}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty():not()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>56babb09-a48e-4ea9-aa7d-d2e30f9fccbc</id>\n        <name>SplitNumberNotEmpty</name>\n\
+    \    </rules>\n</criteria>"
+- id: 0d6fb9a7-ea60-3d04-0000-000000000000
+  name: EvaluateJsonPath
+  class: org.apache.nifi.processors.standard.EvaluateJsonPath
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Destination: flowfile-attribute
+    Null Value Representation: empty string
+    Path Not Found Behavior: ignore
+    Return Type: auto-detect
+    activeFlag: activeFlag
+    closingFilterCondition: closingFilterCondition
+    createdBy: createdBy
+    createdDatetime: createdDatetime
+    dispatchTime: dispatchTime
+    effectiveEnddate: effectiveEnddate
+    effectiveStartdate: effectiveStartdate
+    fullFilterCondition: fullFilterCondition
+    id: id
+    incrFilterCondition: incrFilterCondition
+    ingestionOrder: ingestionOrder
+    ingestionType: ingestionType
+    nullColList: nullColList
+    pubsubSubscriptionName: pubsubSubscriptionName
+    pubsubTopicName: pubsubTopicName
+    runtimeColumnLinking: runtimeColumnLinking
+    scheduleGroup: scheduleGroup
+    scheduleGroupSchedule: scheduleGroupSchedule
+    selectColumnList: selectColumnList
+    sourceAccessType: sourceAccessType
+    sourceChangeLogIdentifier: sourceChangeLogIdentifier
+    sourceDataKey: sourceDataKey
+    sourceDatabaseName: sourceDatabaseName
+    sourceDbType: sourceDbType
+    sourceObjectName: sourceObjectName
+    sourceSchemaName: sourceSchemaName
+    ssrId: ssrId
+    systemName: systemName
+    tableNameOverride: tableNameOverride
+    tableSchedule: tableSchedule
+    volumeCategory: volumeCategory
+- id: 2aa6bea6-1995-3a64-0000-000000000000
+  name: ExecuteSQLRecord
+  class: org.apache.nifi.processors.standard.ExecuteSQLRecord
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 5 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Database Connection Pooling Service: 40106037-bea3-35cf-0000-000000000000
+    Max Wait Time: 0 seconds
+    SQL select query: ${select_query}
+    dbf-user-logical-types: 'true'
+    esql-max-rows: '0'
+    esql-output-batch-size: '0'
+    esqlrecord-normalize: 'true'
+    esqlrecord-record-writer: 4bcd38cd-4099-3368-0000-000000000000
+- id: 426c179c-f87d-3cb8-0000-000000000000
+  name: FetchDateCols
+  class: org.apache.nifi.processors.standard.ExecuteSQLRecord
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Database Connection Pooling Service: f0242ca4-bc81-3e9e-0000-000000000000
+    Max Wait Time: 0 seconds
+    SQL select query: ${select_date_col_query}
+    dbf-user-logical-types: 'false'
+    esql-max-rows: '0'
+    esql-output-batch-size: '0'
+    esqlrecord-normalize: 'true'
+    esqlrecord-record-writer: 4dddb745-1aaa-32ea-0000-000000000000
+- id: 7545a729-3ace-3eb1-0000-000000000000
+  name: FetchNonVarcharNonDateCols
+  class: org.apache.nifi.processors.standard.ExecuteSQLRecord
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Database Connection Pooling Service: f0242ca4-bc81-3e9e-0000-000000000000
+    Max Wait Time: 0 seconds
+    SQL select query: ${select_nonchar_nondate_col_query}
+    dbf-user-logical-types: 'false'
+    esql-max-rows: '0'
+    esql-output-batch-size: '0'
+    esqlrecord-normalize: 'true'
+    esqlrecord-record-writer: 4dddb745-1aaa-32ea-0000-000000000000
+- id: c0a60a72-532d-315b-0000-000000000000
+  name: InsertQueryPUBSUB
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    sqlInsert: INSERT INTO s2hingestionaudits.ingestion_audit_details(message_id,ssr_id,schedule_group,source_schema_name,source_database_name,source_object_name,table_name_override,enddate_time,startdate_time,process_start_time,cli_value,event,retry_iteration,status,configdb_attributes,status_info,total_dispatch_messages,volume_category,dispatch_time,table_record_count,file_record_count,split_record_count,total_split_count,split_number,minifi_gcp_instance)
+      VALUES ('${gcp.pubsub.messageId}','${ssrId}','${scheduleGroup}','${sourceSchemaName}','${sourceDatabaseName}','${sourceObjectName}','${tableNameOverride}','${enddatetime}','${startdatetime}','${processstarttime}','${clivalue}','${event}','${retryCount}','${status}','${configdbattributes}','${statusinfo}','${totalDispatchedMessages}','${volumeCategory}','${dispatchTime}','${executesql.row.count}','${record.count}','${text.line.count}','${fragment.count}','${fragment.index}','${gcp_instance_name}');
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>da7675d4-b20c-4b9a-9005-1af7f1fcec9f</id>\n        <name>checkRetryCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>7f93d07c-4cb1-4910-acfa-1d451ec6abf1</id>\n        <name>checkRowCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>record.count</attribute>\n\
+    \            <id>717ce75e-5291-4167-b413-78dcf86fa833</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${record.count:isEmpty()}</expression>\n\
+    \            <id>0bf151ba-0efb-4af6-b6fc-76d3fcb52ae0</id>\n        </conditions>\n\
+    \        <id>01247925-4d42-427a-8dd1-249c11b24d55</id>\n        <name>checkRecordCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>7a45696d-ea70-49f0-a54d-b80800b53716</id>\n        <name>checkSplitCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>7dca2372-de3a-4c33-b193-aaa96f39302f</id>\n        <name>checkTotalSplitisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>d17610ca-c12d-4548-b235-1be038357339</id>\n        <name>checkSplitNumberisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>${retryCount}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty():not()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>56bf8840-ee71-4116-8f1c-7ebe9f56773f</id>\n        <name>RetryNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>${executesql.row.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty():not()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>04654841-7a86-48eb-9aff-21c0398260be</id>\n        <name>RowCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>04a1702b-6168-4765-b37c-1f8b1bc762f4</id>\n        <name>RecordCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>921d588c-ad7a-451a-b6ee-47becd5198d3</id>\n        <name>SplitCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>${fragment.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty():not()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>e4afc0d9-9241-4332-a599-6f9ab4bbeb21</id>\n        <name>TotalSplitNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>${fragment.index}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty():not()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>56babb09-a48e-4ea9-aa7d-d2e30f9fccbc</id>\n        <name>SplitNumberNotEmpty</name>\n\
+    \    </rules>\n</criteria>"
+- id: eb1fba8a-8cf5-306a-0000-000000000000
+  name: LogAttribute
+  class: org.apache.nifi.processors.standard.LogAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  Properties:
+    Attributes to Ignore: null
+    Attributes to Log: gcp.pubsub.messageId,gcp.pubsub.publishTime
+    Log Level: info
+    Log Payload: 'false'
+    Log prefix: null
+    attributes-to-ignore-regex: null
+    attributes-to-log-regex: .*
+    character-set: windows-1252
+- id: e9301c02-4464-37cf-0000-000000000000
+  name: LogSuccess
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: errorInfo
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    clivalue: 'null'
+    enddatetime: ${endTime}
+    event: ${event}
+    processstarttime: ${dispatchTime}
+    startdatetime: ${startTime}
+    status: SUCCESS
+    statusinfo: ${statusInfo}
+    tableNameOverride: ${tableNameOverride}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>da7675d4-b20c-4b9a-9005-1af7f1fcec9f</id>\n        <name>checkRetryCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>7f93d07c-4cb1-4910-acfa-1d451ec6abf1</id>\n        <name>checkRowCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>record.count</attribute>\n\
+    \            <id>717ce75e-5291-4167-b413-78dcf86fa833</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${record.count:isEmpty()}</expression>\n\
+    \            <id>0bf151ba-0efb-4af6-b6fc-76d3fcb52ae0</id>\n        </conditions>\n\
+    \        <id>01247925-4d42-427a-8dd1-249c11b24d55</id>\n        <name>checkRecordCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>7a45696d-ea70-49f0-a54d-b80800b53716</id>\n        <name>checkSplitCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>7dca2372-de3a-4c33-b193-aaa96f39302f</id>\n        <name>checkTotalSplitisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>d17610ca-c12d-4548-b235-1be038357339</id>\n        <name>checkSplitNumberisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>${retryCount}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty():not()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>56bf8840-ee71-4116-8f1c-7ebe9f56773f</id>\n        <name>RetryNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>${executesql.row.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty():not()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>04654841-7a86-48eb-9aff-21c0398260be</id>\n        <name>RowCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>04a1702b-6168-4765-b37c-1f8b1bc762f4</id>\n        <name>RecordCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>921d588c-ad7a-451a-b6ee-47becd5198d3</id>\n        <name>SplitCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>${fragment.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty():not()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>e4afc0d9-9241-4332-a599-6f9ab4bbeb21</id>\n        <name>TotalSplitNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>${fragment.index}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty():not()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>56babb09-a48e-4ea9-aa7d-d2e30f9fccbc</id>\n        <name>SplitNumberNotEmpty</name>\n\
+    \    </rules>\n</criteria>"
+- id: 27db69eb-7e16-329f-0000-000000000000
+  name: Logfailed
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    clivalue: 'null'
+    enddatetime: ${failedTimestamp}
+    event: ${event}
+    processstarttime: ${dispatchTime}
+    startdatetime: ${startTime}
+    status: FAILED
+    statusinfo: ${statusinfo}
+    tableNameOverride: ${tableNameOverride}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>da7675d4-b20c-4b9a-9005-1af7f1fcec9f</id>\n        <name>checkRetryCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>7f93d07c-4cb1-4910-acfa-1d451ec6abf1</id>\n        <name>checkRowCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>record.count</attribute>\n\
+    \            <id>717ce75e-5291-4167-b413-78dcf86fa833</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${record.count:isEmpty()}</expression>\n\
+    \            <id>0bf151ba-0efb-4af6-b6fc-76d3fcb52ae0</id>\n        </conditions>\n\
+    \        <id>01247925-4d42-427a-8dd1-249c11b24d55</id>\n        <name>checkRecordCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>7a45696d-ea70-49f0-a54d-b80800b53716</id>\n        <name>checkSplitCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>7dca2372-de3a-4c33-b193-aaa96f39302f</id>\n        <name>checkTotalSplitisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>d17610ca-c12d-4548-b235-1be038357339</id>\n        <name>checkSplitNumberisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>${retryCount}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty():not()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>56bf8840-ee71-4116-8f1c-7ebe9f56773f</id>\n        <name>RetryNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>${executesql.row.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty():not()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>04654841-7a86-48eb-9aff-21c0398260be</id>\n        <name>RowCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>04a1702b-6168-4765-b37c-1f8b1bc762f4</id>\n        <name>RecordCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>921d588c-ad7a-451a-b6ee-47becd5198d3</id>\n        <name>SplitCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>${fragment.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty():not()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>e4afc0d9-9241-4332-a599-6f9ab4bbeb21</id>\n        <name>TotalSplitNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>${fragment.index}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty():not()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>56babb09-a48e-4ea9-aa7d-d2e30f9fccbc</id>\n        <name>SplitNumberNotEmpty</name>\n\
+    \    </rules>\n</criteria>"
+- id: 61ba3bb2-5cd6-354f-0000-000000000000
+  name: LogpubsubSuccess
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    clivalue: 'null'
+    configdbattributes: ${JSONAttributes:replaceAll("\'","\''")}
+    enddatetime: ${endTime}
+    event: ${event}
+    processstarttime: ${dispatchTime}
+    startdatetime: ${startTime}
+    status: SUCCESS
+    statusinfo: 'Pub/Sub Ack id: ${gcp.pubsub.ackId}'
+    tableNameOverride: ${tableNameOverride}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>da7675d4-b20c-4b9a-9005-1af7f1fcec9f</id>\n        <name>checkRetryCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>7f93d07c-4cb1-4910-acfa-1d451ec6abf1</id>\n        <name>checkRowCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>record.count</attribute>\n\
+    \            <id>717ce75e-5291-4167-b413-78dcf86fa833</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${record.count:isEmpty()}</expression>\n\
+    \            <id>0bf151ba-0efb-4af6-b6fc-76d3fcb52ae0</id>\n        </conditions>\n\
+    \        <id>01247925-4d42-427a-8dd1-249c11b24d55</id>\n        <name>checkRecordCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>7a45696d-ea70-49f0-a54d-b80800b53716</id>\n        <name>checkSplitCountIsEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>7dca2372-de3a-4c33-b193-aaa96f39302f</id>\n        <name>checkTotalSplitisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>0</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>d17610ca-c12d-4548-b235-1be038357339</id>\n        <name>checkSplitNumberisEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCount</attribute>\n\
+    \            <id>7efa24f8-b8d9-49df-ac38-59dcd186d55e</id>\n            <value>${retryCount}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCount:isEmpty():not()}</expression>\n\
+    \            <id>b3521417-cd1e-4a33-91b7-2ac2b2353b37</id>\n        </conditions>\n\
+    \        <id>56bf8840-ee71-4116-8f1c-7ebe9f56773f</id>\n        <name>RetryNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>executesql.row.count</attribute>\n\
+    \            <id>b6796cb2-4880-471b-935e-5e1e5a584dbb</id>\n            <value>${executesql.row.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${executesql.row.count:isEmpty():not()}</expression>\n\
+    \            <id>1a941ff5-9e5b-47c7-8320-0c37010aec59</id>\n        </conditions>\n\
+    \        <id>04654841-7a86-48eb-9aff-21c0398260be</id>\n        <name>RowCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>04a1702b-6168-4765-b37c-1f8b1bc762f4</id>\n        <name>RecordCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>text.line.count</attribute>\n\
+    \            <id>8185352e-9026-40a8-872c-0a1b0467f4bd</id>\n            <value>${text.line.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${text.line.count:isEmpty():not()}</expression>\n\
+    \            <id>2385251a-3d16-4696-9be9-2ded866dc084</id>\n        </conditions>\n\
+    \        <id>921d588c-ad7a-451a-b6ee-47becd5198d3</id>\n        <name>SplitCountNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.count</attribute>\n\
+    \            <id>9b152c23-ab71-445a-9c9d-405c0bd79979</id>\n            <value>${fragment.count}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.count:isEmpty():not()}</expression>\n\
+    \            <id>22fcdddb-cc77-4347-b3d1-2f53a170db3f</id>\n        </conditions>\n\
+    \        <id>e4afc0d9-9241-4332-a599-6f9ab4bbeb21</id>\n        <name>TotalSplitNotEmpty</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>fragment.index</attribute>\n\
+    \            <id>9c1fa388-da96-4113-b67a-3ff91e19a595</id>\n            <value>${fragment.index}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isEmpty():not()}</expression>\n\
+    \            <id>9a344772-ca9f-4c4b-be46-f7d50f366d8b</id>\n        </conditions>\n\
+    \        <id>56babb09-a48e-4ea9-aa7d-d2e30f9fccbc</id>\n        <name>SplitNumberNotEmpty</name>\n\
+    \    </rules>\n</criteria>"
+- id: ebd16567-77e7-31ae-0000-000000000000
+  name: MergeSplitsForEventGeneration
+  class: org.apache.nifi.processors.standard.MergeContent
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - failure
+  - original
+  Properties:
+    Attribute Strategy: Keep Only Common Attributes
+    Compression Level: '1'
+    Correlation Attribute Name: fragment.identifier
+    Delimiter Strategy: Filename
+    Demarcator File: null
+    Footer File: null
+    Header File: null
+    Keep Path: 'false'
+    Max Bin Age: null
+    Maximum Group Size: null
+    Maximum Number of Entries: '1000'
+    Maximum number of Bins: '50'
+    Merge Format: Binary Concatenation
+    Merge Strategy: Defragment
+    Minimum Group Size: 0 B
+    Minimum Number of Entries: '1'
+    Tar Modified Time: ${file.lastModifiedTime}
+    mergecontent-metadata-strategy: Do Not Merge Uncommon Metadata
+- id: 8dc75a82-0842-3879-0000-000000000000
+  name: MergeSplitsForTriggerGeneration
+  class: org.apache.nifi.processors.standard.MergeContent
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - failure
+  - original
+  Properties:
+    Attribute Strategy: Keep Only Common Attributes
+    Compression Level: '1'
+    Correlation Attribute Name: fragment.identifier
+    Delimiter Strategy: Filename
+    Demarcator File: null
+    Footer File: null
+    Header File: null
+    Keep Path: 'false'
+    Max Bin Age: null
+    Maximum Group Size: null
+    Maximum Number of Entries: '1000'
+    Maximum number of Bins: '50'
+    Merge Format: Binary Concatenation
+    Merge Strategy: Defragment
+    Minimum Group Size: 0 B
+    Minimum Number of Entries: '1'
+    Tar Modified Time: ${file.lastModifiedTime}
+    mergecontent-metadata-strategy: Do Not Merge Uncommon Metadata
+- id: 17aff18b-fda4-33ba-0000-000000000000
+  name: PrepareColumnListForInClause
+  class: org.apache.nifi.processors.groovyx.ExecuteGroovyScript
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    groovyx-additional-classpath: null
+    groovyx-failure-strategy: rollback
+    groovyx-script-body: "flowFile = session.get()\nif(!flowFile) \nreturn\t\nmyColList\
+      \ = flowFile.getAttribute('selectColumnList').split(\",\").collect {it.toString()}\n\
+      queryableCols = myColList.collect { \"'${it}'\"}.join(\",\")\n\nflowFile = session.putAttribute(flowFile,\
+      \ 'colListForInClause', queryableCols )\nsession.transfer(flowFile, REL_SUCCESS)"
+    groovyx-script-file: null
+- id: 3e5829da-5fd7-31d0-0000-000000000000
+  name: PrepareDatabaseQuries
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>select_nonchar_nondate_col_query</attribute>\n\
+    \            <id>6eb14af2-b7c4-431e-a8f7-258708547cb1</id>\n            <value>select\
+    \ lower(column_name) from all_tab_cols where table_name = '${sourceObjectName}'\
+    \ and lower(data_type) not in ('char','nvarchar2','nchar','long','varchar','varchar2','date','timestamp')\
+    \ and lower(column_name) in (${colListForInClause}) and upper(owner)='${sourceSchemaName}'</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${sourceSchemaName:equalsIgnoreCase('default_schema'):not()}</expression>\n\
+    \            <id>51e9203d-7b45-4c0d-a843-9493deb4461d</id>\n        </conditions>\n\
+    \        <id>bf97649f-f838-4f4b-8ed0-73000059a724</id>\n        <name>FetchNonVarcharNonDateCols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_nonchar_nondate_col_query</attribute>\n\
+    \            <id>6eb14af2-b7c4-431e-a8f7-258708547cb1</id>\n            <value>\
+    \ select lower(column_name) from all_tab_cols where table_name = '${sourceObjectName}'\
+    \ and lower(data_type) not in ('char','nvarchar2','nchar','long','varchar','varchar2','date','timestamp')\
+    \ and lower(column_name) in (${colListForInClause})</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceSchemaName:equalsIgnoreCase('default_schema')}</expression>\n\
+    \            <id>51e9203d-7b45-4c0d-a843-9493deb4461d</id>\n        </conditions>\n\
+    \        <id>c6280287-ebed-4954-9a7f-51b6f7cd3ad8</id>\n        <name>FetchNonVarcharNonDateColsWithDatabaseLink</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_date_col_query</attribute>\n\
+    \            <id>94863fda-a878-4f0c-bb4e-5752d97885ca</id>\n            <value>select\
+    \ lower(column_name) from all_tab_cols where table_name = '${sourceObjectName}'\
+    \ and lower(data_type) in ('date','timestamp') and lower(column_name) in (${colListForInClause})\
+    \ and upper(owner)='${sourceSchemaName}'</value>\n        </actions>\n       \
+    \ <conditions>\n            <expression>${sourceSchemaName:equalsIgnoreCase('default_schema'):not()}</expression>\n\
+    \            <id>b9acd3b0-5fbc-465f-8dfd-be2805ab90a7</id>\n        </conditions>\n\
+    \        <id>1633c391-3ffd-4bff-92f4-723e64085b4e</id>\n        <name>FetchDataCols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_date_col_query</attribute>\n\
+    \            <id>94863fda-a878-4f0c-bb4e-5752d97885ca</id>\n            <value>select\
+    \ lower(column_name) from all_tab_cols where table_name = '${sourceObjectName}'\
+    \ and lower(data_type) in ('date','timestamp') and lower(column_name) in (${colListForInClause})</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${sourceSchemaName:equalsIgnoreCase('default_schema')}</expression>\n\
+    \            <id>b9acd3b0-5fbc-465f-8dfd-be2805ab90a7</id>\n        </conditions>\n\
+    \        <id>e0b1ac26-16da-4447-ad56-a26d7eacfec5</id>\n        <name>FetchDataColsWithDatabaseLink</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>queryObjectName</attribute>\n\
+    \            <id>8b7289e0-451b-44a3-9381-01139a2bb3e8</id>\n            <value>${sourceSchemaName}.${sourceObjectName}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${sourceSchemaName:equalsIgnoreCase('default_schema'):not()}</expression>\n\
+    \            <id>fc02b204-f56d-43eb-a618-d17ae4288433</id>\n        </conditions>\n\
+    \        <id>90fe30b3-1458-4d7c-b8ba-55706f6cde17</id>\n        <name>FetchSelectQueryObjectName</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>queryObjectName</attribute>\n\
+    \            <id>8b7289e0-451b-44a3-9381-01139a2bb3e8</id>\n            <value>${sourceObjectName}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${sourceSchemaName:equalsIgnoreCase('default_schema')}</expression>\n\
+    \            <id>fc02b204-f56d-43eb-a618-d17ae4288433</id>\n        </conditions>\n\
+    \        <id>b5648645-87bc-49ba-b808-2df973ab1a5e</id>\n        <name>FetchSelectQueryObjectNameWithDatabaseLink</name>\n\
+    \    </rules>\n</criteria>"
+- id: 7e255ef2-5403-32f7-0000-000000000000
+  name: PublishEncryptEvent
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${encrypt.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    event: FILE-ENCRYPT
+    fileName: ${filename}
+    fragment.count: ${fragment.count:isEmpty():ifElse('1',${fragment.count})}
+    fragment.index: ${fragment.index:isEmpty():ifElse('1',${fragment.index})}
+    startTime: ${encrypt.endtime:format("yyyy-MM-dd HH:mm:ss")}
+    statusInfo: ${sourceObjectName} split number ${fragment.index:isEmpty():ifElse('1',${fragment.index})}
+      of  ${fragment.count:isEmpty():ifElse('1',${fragment.count})} encrypted successfully
+    text.line.count: ${text.line.count:isEmpty():ifElse(${record.count},${text.line.count})}
+- id: 0d37dc10-0bca-39b1-0000-000000000000
+  name: PublishEventName
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${gcs.create.time:format("yyyy-MM-dd HH:mm:ss")}
+    event: FILE-UPLOAD
+    fileName: ${filename}
+    fragment.count: ${fragment.count:isEmpty():ifElse('1',${fragment.count})}
+    fragment.index: ${fragment.index:isEmpty():ifElse('1',${fragment.index})}
+    startTime: ${startTimeCloudDeliveries}
+    statusInfo: ${filename} uploaded successfully
+    text.line.count: ${text.line.count:isEmpty():ifElse(${record.count},${text.line.count})}
+- id: 59e6f968-14cb-3d1d-0000-000000000000
+  name: PublishEventName
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${executesql.query.enddtime:format("yyyy-MM-dd HH:mm:ss")}
+    event: FETCH-SCHEMA
+    executesql.row.count: '0'
+    record.count: '0'
+    startTime: ${executesql.query.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    statusInfo: Select Query Column Count  - ${executesql.row.count}
+- id: a9b554d3-9f11-31c7-0000-000000000000
+  name: PublishEventName
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${executesql.query.enddtime:format("yyyy-MM-dd HH:mm:ss")}
+    event: QUERY-EXECUTION
+    startTime: ${dp_operation_timestamp}
+    statusInfo: Execution Duration(seconds) - ${executesql.query.duration:divide(1000)},
+      Execution Time - ${executesql.query.executiontime:divide(1000)}, Fetch time
+      - ${executesql.query.fetchtime:divide(1000)}
+- id: f3c61bb6-3e75-3e50-0000-000000000000
+  name: PublishEventSplit
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${split.end.time:isEmpty():ifElse(${routeonattribute.end.time:format("yyyy-MM-dd
+      HH:mm:ss")},${split.end.time:format("yyyy-MM-dd HH:mm:ss")})}
+    event: FILE-SPLIT
+    fragment.count: ${fragment.count:isEmpty():ifElse('1',${fragment.count})}
+    fragment.index: ${fragment.index:isEmpty():ifElse('1',${fragment.index})}
+    startTime: ${split.start.time:isEmpty():ifElse(${routeonattribute.start.time:format("yyyy-MM-dd
+      HH:mm:ss")},${split.start.time:format("yyyy-MM-dd HH:mm:ss")})}
+    statusInfo: ${fragment.count:isEmpty():ifElse('1',${fragment.count})} Splits Generated
+    text.line.count: ${text.line.count:isEmpty():ifElse(${record.count},${text.line.count})}
+- id: 8e489f80-d508-37a3-0000-000000000000
+  name: PublishEventSplitFailure
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${split.failed.time:format("yyyy-MM-dd HH:mm:ss")}
+    event: FILE-SPLIT
+    startTime: ${split.start.time:format("yyyy-MM-dd HH:mm:ss")}
+    statusInfo: ${sourceObjectName} split generation failed
+- id: 46d41595-19f0-33e9-0000-000000000000
+  name: PublishFailedEvent-FetchSchema
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${executesql.query.failedtime:format("yyyy-MM-dd HH:mm:ss")}
+    event: FETCH-SCHEMA
+    executesql.row.count: '0'
+    failedTimestamp: ${executesql.query.failedtime:format("yyyy-MM-dd HH:mm:ss")}
+    record.count: '0'
+    startTime: ${executesql.query.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    statusInfo: ' Select Query Column Count - 0'
+- id: 54b9469b-2bbe-32c6-0000-000000000000
+  name: PublishTimestamp
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${now():format("yyyy-MM-dd HH:mm:ss")}
+    event: PUBSUB-CONSUME
+    gcp_instance_name: ${hostname(true)}
+    pubsub.publish.timestamp: ${dispatchTime}
+    selectColumnList: ${selectColumnList}
+    startTime: ${now():format("yyyy-MM-dd HH:mm:ss")}
+- id: a518aae8-ae80-3729-0000-000000000000
+  name: PutSQL
+  class: org.apache.nifi.processors.standard.PutSQL
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - retry
+  - success
+  Properties:
+    Batch Size: '100'
+    JDBC Connection Pool: b633ac12-6ab2-3eee-0000-000000000000
+    Obtain Generated Keys: 'false'
+    Support Fragmented Transactions: 'false'
+    Transaction Timeout: null
+    putsql-sql-statement: ${sqlInsert}
+    rollback-on-failure: 'true'
+- id: 8109d10e-f1dc-3318-0000-000000000000
+  name: RouteOnAttribute
+  class: org.apache.nifi.processors.standard.RouteOnAttribute
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    FULL: ${ingestionType:toUpper():contains("FULL")}
+    INCR: ${ingestionType:toUpper():contains("INCR")}
+    Routing Strategy: Route to Property name
+- id: cda06931-0827-336d-0000-000000000000
+  name: SetRetryCounterExecuteSQLRecord
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    errorInfo: ' ${executesql.failed.reason}'
+    event: QUERY-EXECUTION
+    retryQuerySourceMaxcount: ${retry.maxcount:replaceNull('3')}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_CLONE</flowFilePolicy>\n \
+    \   <rules>\n        <actions>\n            <attribute>retryCounter</attribute>\n\
+    \            <id>e962a06b-f37c-4efb-8e27-e7229486d76c</id>\n            <value>1</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCounter:isNull()}</expression>\n\
+    \            <id>55a9e47f-744a-474e-aff2-39701e383dcd</id>\n        </conditions>\n\
+    \        <id>c9089731-b84d-47ca-8bf6-03e633091238</id>\n        <name>set_retry_counter_0</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCounter</attribute>\n\
+    \            <id>7f0917a9-3612-4983-9431-98dcf2d0e84e</id>\n            <value>${retryCounter:plus(1)}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCounter:ge(1)}</expression>\n\
+    \            <id>9810abc6-702c-43e6-bcb2-ed61fddc0ea6</id>\n        </conditions>\n\
+    \        <id>4aa5c2f7-fc5d-467b-8189-68b0ad28804a</id>\n        <name>set_retry_counter_gt_1</name>\n\
+    \    </rules>\n</criteria>"
+- id: 29eab4bf-a481-3a86-0000-000000000000
+  name: SetRetryCounterUploadToGcsHub
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    errorInfo: ${gcs.error.reason}
+    event: FILE-UPLOAD
+    fileName: ${filename}
+    gcFailureTimestamp: ${now():format("yyyy-MM-dd HH:mm:ss")}
+    retryGcUploadMaxcount: ${retry.maxcount:replaceNull('3')}
+    startTime: ${startTimeCloudDeliveries}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_CLONE</flowFilePolicy>\n \
+    \   <rules>\n        <actions>\n            <attribute>retryCounter</attribute>\n\
+    \            <id>e962a06b-f37c-4efb-8e27-e7229486d76c</id>\n            <value>1</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCounter:isNull()}</expression>\n\
+    \            <id>55a9e47f-744a-474e-aff2-39701e383dcd</id>\n        </conditions>\n\
+    \        <id>c9089731-b84d-47ca-8bf6-03e633091238</id>\n        <name>set_retry_counter_0</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>retryCounter</attribute>\n\
+    \            <id>7f0917a9-3612-4983-9431-98dcf2d0e84e</id>\n            <value>${retryCounter:plus(1)}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${retryCounter:ge(1)}</expression>\n\
+    \            <id>9810abc6-702c-43e6-bcb2-ed61fddc0ea6</id>\n        </conditions>\n\
+    \        <id>4aa5c2f7-fc5d-467b-8189-68b0ad28804a</id>\n        <name>set_retry_counter_gt_1</name>\n\
+    \    </rules>\n</criteria>"
+- id: 8ce7f7a6-93c1-3ea5-0000-000000000000
+  name: SuppressActualData
+  class: org.apache.nifi.processors.standard.AttributesToJSON
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Attributes List: id,ssrId,systemName,scheduleGroupSchedule,scheduleGroup,sourceDbType,sourceObjectName,sourceDatabaseName,sourceSchemaName,sourceDataKey,sourceChangeLogIdentifier,activeFlag,tableSchedule,fullFilterCondition,nullColList,incrFilterCondition,ingestionOrder,runtimeColumnLinking,selectColumnList,createdDatetime,ingestionType,JSONAttributes,totalDispatchedMessages,volumeCategory,dispatchTime,tableNameOverride
+    Destination: flowfile-content
+    Include Core Attributes: 'true'
+    Null Value: 'false'
+    attributes-to-json-regex: null
+- id: 934b9b14-a79f-33a0-0000-000000000000
+  name: SuppressActualData
+  class: org.apache.nifi.processors.standard.AttributesToJSON
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Attributes List: id,ssrId,systemName,scheduleGroupSchedule,scheduleGroup,sourceDbType,sourceObjectName,sourceDatabaseName,sourceSchemaName,sourceDataKey,sourceChangeLogIdentifier,activeFlag,tableSchedule,fullFilterCondition,nullColList,incrFilterCondition,ingestionOrder,runtimeColumnLinking,selectColumnList,createdDatetime,ingestionType,JSONAttributes,totalDispatchedMessages,volumeCategory,dispatchTime,tableNameOverride
+    Destination: flowfile-content
+    Include Core Attributes: 'true'
+    Null Value: 'false'
+    attributes-to-json-regex: null
+- id: ed6aca5f-81e2-30b7-0000-000000000000
+  name: SuppressActualData
+  class: org.apache.nifi.processors.standard.AttributesToJSON
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Attributes List: id,ssrId,systemName,scheduleGroupSchedule,scheduleGroup,sourceDbType,sourceObjectName,sourceDatabaseName,sourceSchemaName,sourceDataKey,sourceChangeLogIdentifier,activeFlag,tableSchedule,fullFilterCondition,nullColList,incrFilterCondition,ingestionOrder,runtimeColumnLinking,selectColumnList,createdDatetime,ingestionType,JSONAttributes,totalDispatchedMessages,volumeCategory,dispatchTime,tableNameOverride
+    Destination: flowfile-content
+    Include Core Attributes: 'true'
+    Null Value: 'false'
+    attributes-to-json-regex: null
+- id: fdb29d6b-f027-3bb1-0000-000000000000
+  name: UpdateAttribute
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    dp_operation_timestamp: ${now():format("yyyy-MM-dd HH:mm:ss")}
+    dp_process_id: ${now():format("yyyyMMddHHmmss")}
+- id: 7758a467-374e-3d90-0000-000000000000
+  name: ZeroRecordEvent
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    endTime: ${executesql.query.enddtime:format("yyyy-MM-dd HH:mm:ss")}
+    event: QUERY-EXECUTION
+    failedTimestamp: ${executesql.query.enddtime:format("yyyy-MM-dd HH:mm:ss")}
+    startTime: ${executesql.query.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    statusinfo: Skipping further processing as Source Row Count is ${executesql.row.count}
+- id: 6975f9e8-073f-3bd6-0000-000000000000
+  name: checkRetryCounterExecuteSQLRecord
+  class: org.apache.nifi.processors.standard.RouteOnAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Routing Strategy: Route to Property name
+    tryAgain: ${retryCounter:lt('${retryQuerySourceMaxcount}')}
+- id: 3f02b9b3-7f76-3525-0000-000000000000
+  name: checkRetryCounterUploadToGcsHub
+  class: org.apache.nifi.processors.standard.RouteOnAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Routing Strategy: Route to Property name
+    tryAgain: ${retryCounter:lt('${retryGcUploadMaxcount}')}
+- id: 291d8b37-c6e9-3544-0000-000000000000
+  name: createQuery
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_CLONE</flowFilePolicy>\n \
+    \   <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectDateColList},'' as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}'\
+    \ as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}' as DPLATFORM_OPERATION_PROCESS_ID\
+    \ from ${queryObjectName} ${incrFilterCondition}</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty()}):and(${selectColumnListWithCastNvl:isEmpty()}):and(${selectDateColList:isEmpty():not()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>71fcaeeb-bc77-452d-a51e-c3c60728fc2b</id>\n        <name>oracle_select_query_only_date_cols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectColumnListWithoutCastNvl},'' as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}'\
+    \ as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}' as DPLATFORM_OPERATION_PROCESS_ID\
+    \ from ${queryObjectName} ${incrFilterCondition}</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty():not()}):and(${selectColumnListWithCastNvl:isEmpty()}):and(${selectDateColList:isEmpty()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>7141cf44-f21e-42ec-848a-346812e354ae</id>\n        <name>oracle_select_query_only_char_cols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectColumnListWithCastNvl},'' as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}'\
+    \ as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}' as DPLATFORM_OPERATION_PROCESS_ID\
+    \ from ${queryObjectName} ${incrFilterCondition}</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty()}):and(${selectColumnListWithCastNvl:isEmpty():not()}):and(${selectDateColList:isEmpty()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>bfd852ca-354f-4064-8a18-02b335fc4b99</id>\n        <name>oracle_select_query_only_nonchar_nondate_cols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectColumnListWithoutCastNvl},${selectDateColList},'' as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}'\
+    \ as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}' as DPLATFORM_OPERATION_PROCESS_ID\
+    \ from ${queryObjectName} ${incrFilterCondition}</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty():not()}):and(${selectColumnListWithCastNvl:isEmpty()}):and(${selectDateColList:isEmpty():not()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>25695f26-094c-4004-b114-6876bc987119</id>\n        <name>oracle_select_query_both_char_date_cols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectColumnListWithoutCastNvl},${selectColumnListWithCastNvl},'' as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}'\
+    \ as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}' as DPLATFORM_OPERATION_PROCESS_ID\
+    \ from ${queryObjectName} ${incrFilterCondition}</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty():not()}):and(${selectColumnListWithCastNvl:isEmpty():not()}):and(${selectDateColList:isEmpty()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>87a42794-bb42-4ed3-96c1-9a8b70fd1ce9</id>\n        <name>oracle_select_query_both_char_nonchar_cols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectColumnListWithCastNvl},${selectDateColList},'' as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}'\
+    \ as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}' as DPLATFORM_OPERATION_PROCESS_ID\
+    \ from ${queryObjectName} ${incrFilterCondition}</value>\n        </actions>\n\
+    \        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty()}):and(${selectColumnListWithCastNvl:isEmpty():not()}):and(${selectDateColList:isEmpty():not()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>867aa629-4ac6-4283-9ed5-9e58a0d14947</id>\n        <name>oracle_select_query_both_nonchar_date_cols</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>select_query</attribute>\n\
+    \            <id>e8f29871-54a6-4a90-a375-1cdae2bff2a8</id>\n            <value>select\
+    \ ${selectColumnListWithoutCastNvl},${selectColumnListWithCastNvl},${selectDateColList},''\
+    \ as DPLATFORM_OPERATION_INDICATOR,'${dp_operation_timestamp}' as DPLATFORM_OPERATION_TIMESTAMP,'${dp_process_id}'\
+    \ as DPLATFORM_OPERATION_PROCESS_ID from ${queryObjectName} ${incrFilterCondition}</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${sourceDbType:toUpper():contains('ORACLE'):and\
+    \ (${selectColumnListWithoutCastNvl:isEmpty():not()}):and(${selectColumnListWithCastNvl:isEmpty():not()}):and(${selectDateColList:isEmpty():not()})}</expression>\n\
+    \            <id>9b5041b3-9bfa-4523-bc85-c72a63bc4c5e</id>\n        </conditions>\n\
+    \        <id>fd6b44f5-60be-4c7f-b081-67d10f63700c</id>\n        <name>oracle_select_query_all_types</name>\n\
+    \    </rules>\n</criteria>"
+- id: 14bb94d8-35c2-361b-0000-000000000000
+  name: encryptContent
+  class: org.apache.nifi.processors.standard.EncryptContent
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Encryption Algorithm: PGP
+    Mode: Encrypt
+    Password: null
+    allow-weak-crypto: not-allowed
+    key-derivation-function: BCRYPT
+    private-keyring-file: null
+    private-keyring-passphrase: null
+    public-key-user-id: sims-user
+    public-keyring-file: /opt/minifi/minifi-0.5.0/jdbcjars/public.key
+    raw-key-hex: null
+- id: 9d8ba2f0-d75d-3313-0000-000000000000
+  name: failureStatusInfoRetryExeceeded
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    executesql.row.count: '0'
+    failedTimestamp: ${executesql.query.failedtime:format("yyyy-MM-dd HH:mm:ss")}
+    record.count: '0'
+    retryCount: ${retryCounter}
+    startdate: ${executesql.query.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    statusinfo: 'ExecuteSQLRecord : Max retry exceeded'
+- id: f298544f-4ea8-3180-0000-000000000000
+  name: failureStatusInfoRetryExeceeded
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    failedTimestamp: ${gcFailureTimestamp}
+    retryCount: ${retryCounter}
+    startdate: ${startTimeCloudDeliveries}
+    statusinfo: ${filename}
+- id: 83845f40-3dab-3d16-0000-000000000000
+  name: failureStatusInfoRetryInprogress
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    executesql.row.count: '0'
+    failedTimestamp: ${executesql.query.failedtime:format("yyyy-MM-dd HH:mm:ss")}
+    record.count: '0'
+    retryCount: ${retryCounter}
+    startdate: ${executesql.query.starttime:format("yyyy-MM-dd HH:mm:ss")}
+    statusinfo: 'ExecuteSQLRecord : ${retryCounter:prepend("Retry Querying Source
+      "):append(" times out of "):append(${retryQuerySourceMaxcount})}'
+- id: bf789e36-6367-3cc3-0000-000000000000
+  name: failureStatusInfoRetryInprogress
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    failedTimestamp: ${gcFailureTimestamp}
+    retryCount: ${retryCounter}
+    startdate: ${startTimeCloudDeliveries}
+    statusinfo: ${filename}
+- id: af3b4c13-b6f9-3419-0000-000000000000
+  name: nonVarcharNonDateCols
+  class: org.apache.nifi.processors.standard.ExtractText
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Enable Canonical Equivalence: 'false'
+    Enable Case-insensitive Matching: 'false'
+    Enable DOTALL Mode: 'false'
+    Enable Literal Parsing of the Pattern: 'false'
+    Enable Multiline Mode: 'false'
+    Enable Unicode Predefined Character Classes: 'false'
+    Enable Unicode-aware Case Folding: 'false'
+    Enable Unix Lines Mode: 'false'
+    Include Capture Group 0: 'true'
+    Maximum Buffer Size: 10 MB
+    Maximum Capture Group Length: '10000'
+    Permit Whitespace and Comments in Pattern: 'false'
+    extract-text-enable-repeating-capture-group: 'false'
+    nonVarcharNonDateCols: (.*)
+- id: 004f40c3-32da-33c7-0000-000000000000
+  name: onlyDateCols
+  class: org.apache.nifi.processors.standard.ExtractText
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Enable Canonical Equivalence: 'false'
+    Enable Case-insensitive Matching: 'false'
+    Enable DOTALL Mode: 'false'
+    Enable Literal Parsing of the Pattern: 'false'
+    Enable Multiline Mode: 'false'
+    Enable Unicode Predefined Character Classes: 'false'
+    Enable Unicode-aware Case Folding: 'false'
+    Enable Unix Lines Mode: 'false'
+    Include Capture Group 0: 'true'
+    Maximum Buffer Size: 10 MB
+    Maximum Capture Group Length: '10000'
+    Permit Whitespace and Comments in Pattern: 'false'
+    extract-text-enable-repeating-capture-group: 'false'
+    onlyDateCols: (.*)
+- id: b85c550a-ca74-3afc-0000-000000000000
+  name: prioritzeIngestionAndCaptureIngestion StartTime
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    database.name: ${sourceConnectionName:toUpper()}
+    ingestionTimestamp: ${now():format("yyyyMMddHHmmss")}
+    priority: ${ingestionOrder}
+    statusStartedTimestamp: ${now():format("yyyy-MM-dd HH:mm:ss")}
+- id: 05a8dd9e-5927-3f14-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - failure
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: 161d23f1-cf94-3f6e-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: 3430b392-b63e-34bf-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: 75767be6-2558-3a83-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: 79608381-0508-3e39-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - failure
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: aa7fd4b6-d51e-3c25-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: e9a6adfe-e2d8-3642-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: fbacfdad-34d5-3c49-0000-000000000000
+  name: removeFileContent
+  class: org.apache.nifi.processors.standard.ReplaceText
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Character Set: UTF-8
+    Evaluation Mode: Entire text
+    Maximum Buffer Size: 5 GB
+    Regular Expression: (?s)(^.*$)
+    Replacement Strategy: Always Replace
+    Replacement Value: ''
+- id: 601e8890-4cfd-33a1-0000-000000000000
+  name: resetRetryCounterExecuteSQLRecord
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    retryCounter: '0'
+- id: a6b6ca0f-4963-3e7c-0000-000000000000
+  name: resetRetryCounterUploadToGcsHub
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    retryCounter: '0'
+- id: 8ace45f5-fbd4-3de4-0000-000000000000
+  name: routeTheFileBasedOnSize
+  class: org.apache.nifi.processors.standard.RouteOnAttribute
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - zero_record
+  Properties:
+    Routing Strategy: Route to Property name
+    split_file: ${fileSize:gt(2147483648)}
+    zero_record: ${executesql.row.count:equals('0')}
+- id: 69e264e6-2533-3c3e-0000-000000000000
+  name: routeToTriggerForSplitOrUnsplitFiles
+  class: org.apache.nifi.processors.standard.RouteOnAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Routing Strategy: Route to Property name
+    split: ${fragment.count:notNull()}
+- id: 2596106c-f5ad-3635-0000-000000000000
+  name: routeZeroRecordFile
+  class: org.apache.nifi.processors.standard.RouteOnAttribute
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Routing Strategy: Route to Property name
+    zero_record: ${executesql.row.count:equals('0')}
+- id: 9492020c-3efb-3ca0-0000-000000000000
+  name: splitLargeFiles
+  class: org.apache.nifi.processors.standard.SplitText
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - original
+  Properties:
+    Header Line Count: '1'
+    Header Line Marker Characters: null
+    Line Split Count: '0'
+    Maximum Fragment Size: 2 GB
+    Remove Trailing Newlines: 'false'
+- id: 24afe08d-1faf-30d7-0000-000000000000
+  name: updateFilename
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 5
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    startTimeCloudDeliveries: ${now():format("yyyy-MM-dd HH:mm:ss")}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>1b5649c7-9c50-4b6b-a1e3-aed457de8cd2</id>\n            <value>${ssrId:toUpper()}_${sourceObjectName:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_00${fragment.index}_00${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:lt(10)\
+    \ :and (${fragment.count:lt(10)}) :and (${tableNameOverride:isEmpty()})}</expression>\n\
+    \            <id>23a4386b-ca92-485a-9bba-925e86785268</id>\n        </conditions>\n\
+    \        <id>bbe2f808-7534-425a-964e-b20649f18ada</id>\n        <name>add_fragment_index_as_suffix_tableNameOverride_null</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>1b5649c7-9c50-4b6b-a1e3-aed457de8cd2</id>\n            <value>${ssrId:toUpper()}_${tableNameOverride:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_00${fragment.index}_00${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:lt(10)\
+    \ :and (${fragment.count:lt(10)}) :and (${tableNameOverride:isEmpty():not()})}</expression>\n\
+    \            <id>23a4386b-ca92-485a-9bba-925e86785268</id>\n        </conditions>\n\
+    \        <id>264e7ee5-f3f6-45f0-8941-40978522f33d</id>\n        <name>add_fragment_index_as_suffix_tableNameOverride_notNull</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>e55e46a1-cc70-4cbc-92cd-e2c08af14e1c</id>\n            <value>${ssrId:toUpper()}_${sourceObjectName:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_00${fragment.index}_0${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:lt(10)\
+    \ :and (${fragment.count:gt(9)}) :and(${fragment.count:lt(100)}) :and (${tableNameOverride:isEmpty()})}</expression>\n\
+    \            <id>73b911a1-946e-4e26-888e-6f3998ebeddc</id>\n        </conditions>\n\
+    \        <id>9b2f7ebd-b677-49d2-b866-9f8dea37db12</id>\n        <name>add_fragment_index_as_suffix_fragment_count_gt_9_tableNameOverride_null</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>e55e46a1-cc70-4cbc-92cd-e2c08af14e1c</id>\n            <value>${ssrId:toUpper()}_${tableNameOverride:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_00${fragment.index}_0${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:lt(10)\
+    \ :and (${fragment.count:gt(9)}) :and(${fragment.count:lt(100)}) :and (${tableNameOverride:isEmpty():not()})}</expression>\n\
+    \            <id>73b911a1-946e-4e26-888e-6f3998ebeddc</id>\n        </conditions>\n\
+    \        <id>d98aba60-a5cd-441d-8ac9-c6ce26780d53</id>\n        <name>add_fragment_index_as_suffix_fragment_count_gt_9_tableNameOverride_notNull</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>17ddfb55-48fe-4913-a77b-62d5a9f920cd</id>\n            <value>${ssrId:toUpper()}_${sourceObjectName:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_00${fragment.index}_${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:lt(10)\
+    \ :and (${fragment.count:gt(99)}) :and (${tableNameOverride:isEmpty()})}</expression>\n\
+    \            <id>00e12d0a-cbd4-4849-af9b-b63641741f81</id>\n        </conditions>\n\
+    \        <id>7fa4beb6-e512-4cea-af5b-94732cea1ac3</id>\n        <name>add_fragment_index_gt_9_and_fragment_count_gt_99_tableNameOverride_null</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>17ddfb55-48fe-4913-a77b-62d5a9f920cd</id>\n            <value>${ssrId:toUpper()}_${tableNameOverride:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_00${fragment.index}_${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:lt(10)\
+    \ :and (${fragment.count:gt(99)}) :and (${tableNameOverride:isEmpty():not()})}</expression>\n\
+    \            <id>00e12d0a-cbd4-4849-af9b-b63641741f81</id>\n        </conditions>\n\
+    \        <id>e861289b-d3ed-4013-9547-75ef21e0d2ae</id>\n        <name>add_fragment_index_gt_9_and_fragment_count_gt_99_tableNameOverride_notNull</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>9a417429-77a4-4350-bdfe-1756e64852b3</id>\n            <value>${ssrId:toUpper()}_${sourceObjectName:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_0${fragment.index}_0${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:ge(10):and(${fragment.index:lt(100)}):\
+    \ and(${fragment.count:lt(100)}) :and (${tableNameOverride:isEmpty()})}</expression>\n\
+    \            <id>15dac08f-24cc-4319-ae2a-10be73b4d3d5</id>\n        </conditions>\n\
+    \        <id>10f59ddb-2ae3-476f-879d-4570d739ad0f</id>\n        <name>add_fragment_index_gt_9_tableNameOverride_null</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>9a417429-77a4-4350-bdfe-1756e64852b3</id>\n            <value>${ssrId:toUpper()}_${tableNameOverride:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_0${fragment.index}_0${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:ge(10):and(${fragment.index:lt(100)}):\
+    \ and(${fragment.count:lt(100)}) :and (${tableNameOverride:isEmpty():not()})}</expression>\n\
+    \            <id>15dac08f-24cc-4319-ae2a-10be73b4d3d5</id>\n        </conditions>\n\
+    \        <id>9606782f-e028-4ce6-8f3b-3b75a4843b6e</id>\n        <name>add_fragment_index_gt_9_tableNameOverride_notNull</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>bfe0e8ca-87cf-4139-837f-d65c2273d28c</id>\n            <value>${ssrId:toUpper()}_${sourceObjectName:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_${fragment.index}_${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:ge(100)\
+    \ :and (${tableNameOverride:isEmpty()})}</expression>\n            <id>7f2c3e4b-02d0-47c6-b7a8-735ff0fce257</id>\n\
+    \        </conditions>\n        <id>48df1819-7c73-4506-9bbd-be52aa1fee60</id>\n\
+    \        <name>add_fragment_index_gt_99_tableNameOverride_null</name>\n    </rules>\n\
+    \    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>bfe0e8ca-87cf-4139-837f-d65c2273d28c</id>\n            <value>${ssrId:toUpper()}_${tableNameOverride:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_${fragment.index}_${fragment.count}.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:ge(100)\
+    \ :and (${tableNameOverride:isEmpty():not()})}</expression>\n            <id>7f2c3e4b-02d0-47c6-b7a8-735ff0fce257</id>\n\
+    \        </conditions>\n        <id>5d960779-fe08-4768-b689-1e878b3d60e7</id>\n\
+    \        <name>add_fragment_index_gt_99_tableNameOverride_notNull</name>\n   \
+    \ </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>30e36a0f-c252-4f39-a6b8-254f35597ffc</id>\n            <value>${ssrId:toUpper()}_${sourceObjectName:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_001_001.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isNull()\
+    \ :and (${tableNameOverride:isEmpty()})}</expression>\n            <id>1c57e165-2360-4279-8139-e4f4e9d25bf3</id>\n\
+    \        </conditions>\n        <id>93692175-23ac-4464-aed9-a9cd0727f914</id>\n\
+    \        <name>Check_fragment_index_attribute_tableNameOverride_null</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>30e36a0f-c252-4f39-a6b8-254f35597ffc</id>\n            <value>${ssrId:toUpper()}_${tableNameOverride:toUpper()}_1_0_${ingestionType:toUpper()}_${dp_process_id}_001_001.DAT.enc</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${fragment.index:isNull()\
+    \ :and (${tableNameOverride:isEmpty():not()})}</expression>\n            <id>1c57e165-2360-4279-8139-e4f4e9d25bf3</id>\n\
+    \        </conditions>\n        <id>fa4898f4-db93-4fb5-accd-009ac8b5923b</id>\n\
+    \        <name>Check_fragment_index_attribute_tableNameOverride_notNull</name>\n\
+    \    </rules>\n    <rules>\n        <actions>\n            <attribute>startTimeGCP</attribute>\n\
+    \            <id>b395d6df-7d48-458b-a59c-523597636df8</id>\n            <value>${now():format(\"\
+    yyyy-MM-dd HH:mm:ss\")}</value>\n        </actions>\n        <conditions>\n  \
+    \          <expression>${cloudDeliveryTarget:toLower():contains('gcp')}</expression>\n\
+    \            <id>69a0af7b-b786-4076-bb59-183ba79a327f</id>\n        </conditions>\n\
+    \        <id>e281fec4-3715-4b9a-8ff0-449fe85c453c</id>\n        <name>startTimeCloudDeliveryGCP</name>\n\
+    \    </rules>\n</criteria>"
+- id: cf10b8f5-99d6-3de4-0000-000000000000
+  name: updateTriggerFileAndFolderName
+  class: org.apache.nifi.processors.attributes.UpdateAttribute
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Delete Attributes Expression: null
+    Stateful Variables Initial Value: null
+    Store State: Do not store state
+    foldername: ${ssrId:toLower()}-${scheduleGroup:toLower()}-${volumeCategory:toLower()}
+  annotation data: "<criteria>\n    <flowFilePolicy>USE_ORIGINAL</flowFilePolicy>\n\
+    \    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>b92baa64-69de-4bad-b1fb-0a5d9eed0e0d</id>\n            <value>${ssrId:toLower()}-${scheduleGroup:toLower()}-${volumeCategory:toLower()}|${sourceObjectName:toLower()}|${ingestionType:toLower()}|${ingestionTimestamp}|${totalDispatchedMessages}.DAT</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${ tableNameOverride:isEmpty()\
+    \ }</expression>\n            <id>f28c9c63-c95a-4116-a867-dd2737375108</id>\n\
+    \        </conditions>\n        <id>c4da3895-f46c-4f35-960c-ba83806ddf20</id>\n\
+    \        <name>SET_FILENAME_IF_TABLE_NAME_OVERRIDE_NOT_FOUND</name>\n    </rules>\n\
+    \    <rules>\n        <actions>\n            <attribute>filename</attribute>\n\
+    \            <id>258e9c16-e892-40ca-992a-fccd8cff6baf</id>\n            <value>${ssrId:toLower()}-${scheduleGroup:toLower()}-${volumeCategory:toLower()}|${tableNameOverride:toLower()}|${ingestionType:toLower()}|${ingestionTimestamp}|${totalDispatchedMessages}.DAT</value>\n\
+    \        </actions>\n        <conditions>\n            <expression>${ tableNameOverride:isEmpty():not()\
+    \ }</expression>\n            <id>59b84e60-4167-4449-9238-a4e74e6a83d3</id>\n\
+    \        </conditions>\n        <id>d1624f00-e7ce-4e5b-af27-3ac756eddc2f</id>\n\
+    \        <name>SET_FILENAME_IF_TABLE_NAME_OVERRIDE_FOUND</name>\n    </rules>\n\
+    </criteria>"
+- id: 45a2d0ef-bc15-3182-0000-000000000000
+  name: uploadToGcsHub
+  class: org.apache.nifi.processors.gcp.storage.PutGCSObject
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    GCP Credentials Provider Service: d13f1da1-e206-3bfb-0000-000000000000
+    gcp-project-id: GCP_PROJECT_ID_HUB
+    gcp-proxy-host: null
+    gcp-proxy-port: null
+    gcp-proxy-user-name: null
+    gcp-proxy-user-password: null
+    gcp-retry-count: '6'
+    gcs-bucket: GCP_BUCKET_HUB
+    gcs-content-disposition-type: null
+    gcs-content-type: ${mime.type}
+    gcs-key: ${filename}
+    gcs-object-acl: null
+    gcs-object-crc32c: null
+    gcs-object-md5: null
+    gcs-overwrite-object: 'true'
+    gcs-server-side-encryption-key: null
+    proxy-configuration-service: null
+- id: ab1a203d-8ce4-33ad-0000-000000000000
+  name: uploadToGcsTrigger
+  class: org.apache.nifi.processors.gcp.storage.PutGCSObject
+  max concurrent tasks: 10
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  Properties:
+    GCP Credentials Provider Service: b93f4e66-9064-3c7a-0000-000000000000
+    gcp-project-id: GCP_PROJECT_ID_TRIGGER
+    gcp-proxy-host: null
+    gcp-proxy-port: null
+    gcp-proxy-user-name: null
+    gcp-proxy-user-password: null
+    gcp-retry-count: '6'
+    gcs-bucket: GCP_BUCKET_TRIGGER
+    gcs-content-disposition-type: null
+    gcs-content-type: ${mime.type}
+    gcs-key: ${foldername}/${filename}
+    gcs-object-acl: null
+    gcs-object-crc32c: null
+    gcs-object-md5: null
+    gcs-overwrite-object: 'true'
+    gcs-server-side-encryption-key: null
+    proxy-configuration-service: null
+    scheduleGroupInformation: ${scheduleGroup}
+Controller Services:
+- id: b633ac12-6ab2-3eee-0000-000000000000
+  name: AuditIngestionDbcpConnection
+  type: org.apache.nifi.dbcp.DBCPConnectionPool
+  Properties:
+    Database Connection URL: AUDIT_JDBC_CONNECTION
+    Database Driver Class Name: org.postgresql.Driver
+    Database User: AUDIT_USER
+    Max Total Connections: '8'
+    Max Wait Time: 500 millis
+    Password: SECRETFROMKMSAUDIT
+    Validation-query: null
+    database-driver-locations: /opt/minifi/minifi-0.5.0/jdbcjars/postgresql-42.2.6.jar
+- id: 4bcd38cd-4099-3368-0000-000000000000
+  name: CSVRecordSetWriterSLB
+  type: org.apache.nifi.csv.CSVRecordSetWriterSLB
+  Properties:
+    CSV Format: custom
+    Comment Marker: null
+    Date Format: yyyy-MM-dd
+    Escape Character: "\xAC"
+    Include Header Line: 'true'
+    Include Trailing Delimiter: 'false'
+    Null String: \N
+    Quote Character: '"'
+    Quote Mode: NONE
+    Record Separator: \n
+    Schema Write Strategy: no-schema
+    Time Format: HH:mm:ss.SSS
+    Timestamp Format: yyyy-MM-dd HH:mm:ss.SSS
+    Trim Fields: 'false'
+    Value Separator: ^^``
+    csvutils-character-set: UTF-8
+    schema-access-strategy: inherit-record-schema
+    schema-branch: null
+    schema-name: ${schema.name}
+    schema-registry: null
+    schema-text: ${avro.schema}
+    schema-version: null
+- id: 4dddb745-1aaa-32ea-0000-000000000000
+  name: CSVRecordSetWriterSLBForSchemaInfo
+  type: org.apache.nifi.csv.CSVRecordSetWriterSLB
+  Properties:
+    CSV Format: custom
+    Comment Marker: null
+    Date Format: null
+    Escape Character: \
+    Include Header Line: 'false'
+    Include Trailing Delimiter: 'false'
+    Null String: null
+    Quote Character: '"'
+    Quote Mode: NONE
+    Record Separator: ','
+    Schema Write Strategy: no-schema
+    Time Format: null
+    Timestamp Format: null
+    Trim Fields: 'true'
+    Value Separator: ','
+    csvutils-character-set: UTF-8
+    schema-access-strategy: inherit-record-schema
+    schema-branch: null
+    schema-name: ${schema.name}
+    schema-registry: null
+    schema-text: ${avro.schema}
+    schema-version: null
+- id: d13f1da1-e206-3bfb-0000-000000000000
+  name: GCPCredentialsControllerServiceHub
+  type: org.apache.nifi.processors.gcp.credentials.service.GCPCredentialsControllerService
+  Properties:
+    application-default-credentials: 'false'
+    compute-engine-credentials: 'false'
+    proxy-configuration-service: null
+    service-account-json: null
+    service-account-json-file: /mnt/slb-it-hdf-landing-bucket.json
+- id: 0e9e49b2-54e4-36bf-0000-000000000000
+  name: GCPCredentialsControllerServicePubSub
+  type: org.apache.nifi.processors.gcp.credentials.service.GCPCredentialsControllerService
+  Properties:
+    application-default-credentials: 'false'
+    compute-engine-credentials: 'false'
+    proxy-configuration-service: null
+    service-account-json: null
+    service-account-json-file: /mnt/slb-it-hdf-pubsub.json
+- id: b93f4e66-9064-3c7a-0000-000000000000
+  name: GCPCredentialsControllerServiceTrigger
+  type: org.apache.nifi.processors.gcp.credentials.service.GCPCredentialsControllerService
+  Properties:
+    application-default-credentials: 'false'
+    compute-engine-credentials: 'false'
+    proxy-configuration-service: null
+    service-account-json: null
+    service-account-json-file: /mnt/slb-it-hdf-trigger.json
+- id: 40106037-bea3-35cf-0000-000000000000
+  name: SourceDBCPConnectionPool
+  type: org.apache.nifi.dbcp.DBCPConnectionPool
+  Properties:
+    Database Connection URL: jdbc:oracle:thin:@136.252.129.170:1521:LSWPS
+    Database Driver Class Name: oracle.jdbc.driver.OracleDriver
+    Database User: DATALAKERO
+    Max Total Connections: '3'
+    Max Wait Time: 500 millis
+    Password: SECRETFROMKMSSOURCE
+    Validation-query: null
+    database-driver-locations: /opt/minifi/minifi-0.5.0/jdbcjars/ojdbc6-11.2.0.4.jar
+    defaultRowPrefetch: '4000'
+- id: f0242ca4-bc81-3e9e-0000-000000000000
+  name: SourceDBCPConnectionPoolFetchSchema
+  type: org.apache.nifi.dbcp.DBCPConnectionPool
+  Properties:
+    Database Connection URL: jdbc:oracle:thin:@136.252.129.170:1521:LSWPS
+    Database Driver Class Name: oracle.jdbc.driver.OracleDriver
+    Database User: DATALAKERO
+    Max Total Connections: '3'
+    Max Wait Time: 1000 millis
+    Password: SECRETFROMKMSSOURCE
+    Validation-query: null
+    database-driver-locations: /opt/minifi/minifi-0.5.0/jdbcjars/ojdbc6-11.2.0.4.jar
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+- id: b17a0930-0162-3cf7-0000-000000000000
+  name: CaptureFailureEncryptEvent/success/CreateAuditEntry
+  source id: 55d63857-b629-38a3-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ee310d4b-0960-301e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 25c71ae9-4878-3e69-0000-000000000000
+  name: ConsumeGCPubSub/success/EvaluateJsonPath
+  source id: 1659b108-90ad-3add-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 0d6fb9a7-ea60-3d04-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: d752ccd8-2364-3312-0000-000000000000
+  name: ConsumeGCPubSub/success/LogAttribute
+  source id: 1659b108-90ad-3add-0000-000000000000
+  source relationship names:
+  - success
+  destination id: eb1fba8a-8cf5-306a-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 6b363f99-a525-3fa8-0000-000000000000
+  name: CreateAuditEntry/failure/CreateAuditEntry
+  source id: fb0aa548-d819-34c4-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 964dda61-0ad6-35c1-0000-000000000000
+  name: CreateAuditEntry/failure/CreateAuditEntry
+  source id: 7417aa73-a4ce-35e0-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 7417aa73-a4ce-35e0-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: ac0d1029-2d49-33a9-0000-000000000000
+  name: CreateAuditEntry/failure/CreateAuditEntry
+  source id: ee310d4b-0960-301e-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: ee310d4b-0960-301e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 2a2e34ea-4045-3977-0000-000000000000
+  name: CreateAuditEntry/success/SuppressActualData
+  source id: 7417aa73-a4ce-35e0-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 8ce7f7a6-93c1-3ea5-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 4584573a-6fd2-3ff7-0000-000000000000
+  name: CreateAuditEntry/success/SuppressActualData
+  source id: fb0aa548-d819-34c4-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 934b9b14-a79f-33a0-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 99cf7a1d-d11c-3f84-0000-000000000000
+  name: CreateAuditEntry/success/SuppressActualData
+  source id: ee310d4b-0960-301e-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ed6aca5f-81e2-30b7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e2497c30-7ce1-3039-0000-000000000000
+  name: CreateColumnListWithCast/failure/CreateColumnListWithCast
+  source id: 82d9d2c1-92df-303a-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 82d9d2c1-92df-303a-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 96715c91-7934-3b35-0000-000000000000
+  name: CreateColumnListWithCast/success/UpdateAttribute
+  source id: 82d9d2c1-92df-303a-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fdb29d6b-f027-3bb1-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: d0073e17-0113-304c-0000-000000000000
+  name: CreateInsertQueryOthers/success/PutSQL
+  source id: 7bf328d4-d71a-3857-0000-000000000000
+  source relationship names:
+  - success
+  destination id: a518aae8-ae80-3729-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: d2e0e8bc-d6b7-3d60-0000-000000000000
+  name: EvaluateJsonPath/failure/EvaluateJsonPath
+  source id: 0d6fb9a7-ea60-3d04-0000-000000000000
+  source relationship names:
+  - failure
+  - unmatched
+  destination id: 0d6fb9a7-ea60-3d04-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 6ee30b1a-4d41-34e7-0000-000000000000
+  name: EvaluateJsonPath/matched/PublishTimestamp
+  source id: 0d6fb9a7-ea60-3d04-0000-000000000000
+  source relationship names:
+  - matched
+  destination id: 54b9469b-2bbe-32c6-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e4f09c69-97b3-30d6-0000-000000000000
+  name: ExecuteSQLRecord/failure/SetRetryCounterExecuteSQLRecord
+  source id: 2aa6bea6-1995-3a64-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: cda06931-0827-336d-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 63f91f4b-900a-31e8-0000-000000000000
+  name: ExecuteSQLRecord/success/routeTheFileBasedOnSize
+  source id: 2aa6bea6-1995-3a64-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 8ace45f5-fbd4-3de4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 30 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 31186d15-19e0-36f6-0000-000000000000
+  name: ExecuteSQLRecord/success/routeZeroRecordFile
+  source id: 2aa6bea6-1995-3a64-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 2596106c-f5ad-3635-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 33a0799a-80d6-3bff-0000-000000000000
+  name: FetchDateCols/failure/onlyDateCols
+  source id: 426c179c-f87d-3cb8-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 004f40c3-32da-33c7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 6d8d943f-4629-35fe-0000-000000000000
+  name: FetchDateCols/success/onlyDateCols
+  source id: 426c179c-f87d-3cb8-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 004f40c3-32da-33c7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 8baa2cdf-fb38-34d2-0000-000000000000
+  name: FetchNonVarcharNonDateCols/failure/CreateColumnListWithCast
+  source id: 7545a729-3ace-3eb1-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 82d9d2c1-92df-303a-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 3ed997ff-2572-3a7b-0000-000000000000
+  name: FetchNonVarcharNonDateCols/failure/PublishFailedEvent-FetchSchema
+  source id: 7545a729-3ace-3eb1-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 46d41595-19f0-33e9-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 0bea24b5-9ffc-3fdc-0000-000000000000
+  name: FetchNonVarcharNonDateCols/success/PublishEventName
+  source id: 7545a729-3ace-3eb1-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 59e6f968-14cb-3d1d-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: bd0d2596-58f7-313f-0000-000000000000
+  name: FetchNonVarcharNonDateCols/success/nonVarcharNonDateCols
+  source id: 7545a729-3ace-3eb1-0000-000000000000
+  source relationship names:
+  - success
+  destination id: af3b4c13-b6f9-3419-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 5 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 8ddf466e-df93-3e57-0000-000000000000
+  name: InsertQueryPUBSUB/success/PutSQL
+  source id: c0a60a72-532d-315b-0000-000000000000
+  source relationship names:
+  - success
+  destination id: a518aae8-ae80-3729-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 0ed614a1-7280-3ac8-0000-000000000000
+  name: LogSuccess/success/CreateInsertQueryOthers
+  source id: e9301c02-4464-37cf-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 7bf328d4-d71a-3857-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 94ba4edb-69fc-35a0-0000-000000000000
+  name: Logfailed/success/CreateInsertQueryOthers
+  source id: 27db69eb-7e16-329f-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 7bf328d4-d71a-3857-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 24523fe7-95fd-3429-0000-000000000000
+  name: LogpubsubSuccess/success/InsertQueryPUBSUB
+  source id: 61ba3bb2-5cd6-354f-0000-000000000000
+  source relationship names:
+  - success
+  destination id: c0a60a72-532d-315b-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 03f9368d-bfea-37cc-0000-000000000000
+  name: MergeSplitsForEventGeneration/merged/PublishEventSplit
+  source id: ebd16567-77e7-31ae-0000-000000000000
+  source relationship names:
+  - merged
+  destination id: f3c61bb6-3e75-3e50-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 171e681e-d93b-3794-0000-000000000000
+  name: MergeSplitsForTriggerGeneration/merged/updateTriggerFileAndFolderName
+  source id: 8dc75a82-0842-3879-0000-000000000000
+  source relationship names:
+  - merged
+  destination id: cf10b8f5-99d6-3de4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 2d0a615d-f67c-33b3-0000-000000000000
+  name: PrepareColumnListForInClause/failure/PrepareColumnListForInClause
+  source id: 17aff18b-fda4-33ba-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 17aff18b-fda4-33ba-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 756b8fc9-e0d0-34e8-0000-000000000000
+  name: PrepareColumnListForInClause/success/PrepareDatabaseQuries
+  source id: 17aff18b-fda4-33ba-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 3e5829da-5fd7-31d0-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 5 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 2ba633c4-3005-3bc2-0000-000000000000
+  name: PrepareDatabaseQuries/success/FetchNonVarcharNonDateCols
+  source id: 3e5829da-5fd7-31d0-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 7545a729-3ace-3eb1-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 095104e4-79c3-3b41-0000-000000000000
+  name: PublishEncryptEvent/success/CreateAuditEntry
+  source id: 7e255ef2-5403-32f7-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: a18846ef-e849-3f03-0000-000000000000
+  name: PublishEventName/success/CreateAuditEntry
+  source id: a9b554d3-9f11-31c7-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e7eee419-26fd-380d-0000-000000000000
+  name: PublishEventName/success/CreateAuditEntry
+  source id: 59e6f968-14cb-3d1d-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: f66760ee-c54e-30c9-0000-000000000000
+  name: PublishEventName/success/CreateAuditEntry
+  source id: 0d37dc10-0bca-39b1-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 9d0e8292-5a13-30a4-0000-000000000000
+  name: PublishEventSplit/success/CreateAuditEntry
+  source id: f3c61bb6-3e75-3e50-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: ce139ac3-20bf-3c08-0000-000000000000
+  name: PublishEventSplitFailure/success/CreateAuditEntry
+  source id: 8e489f80-d508-37a3-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ee310d4b-0960-301e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 73928662-ce66-39c8-0000-000000000000
+  name: PublishFailedEvent-FetchSchema/success/CreateAuditEntry
+  source id: 46d41595-19f0-33e9-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fb0aa548-d819-34c4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 75b9071c-039e-302a-0000-000000000000
+  name: PublishTimestamp/success/CreateAuditEntry
+  source id: 54b9469b-2bbe-32c6-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 7417aa73-a4ce-35e0-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 392fde30-79a2-32ae-0000-000000000000
+  name: PublishTimestamp/success/PrepareColumnListForInClause
+  source id: 54b9469b-2bbe-32c6-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 17aff18b-fda4-33ba-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: a4f8cadf-1e2a-3f7e-0000-000000000000
+  name: PutSQL/failure/LogAttribute
+  source id: a518aae8-ae80-3729-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: eb1fba8a-8cf5-306a-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 035ba89c-68a0-3412-0000-000000000000
+  name: RouteOnAttribute/INCR/CreateColumnListWithCast
+  source id: 8109d10e-f1dc-3318-0000-000000000000
+  source relationship names:
+  - FULL
+  - INCR
+  destination id: 82d9d2c1-92df-303a-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 2 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 73aa56a2-4a2b-30a7-0000-000000000000
+  name: RouteOnAttribute/unmatched/RouteOnAttribute
+  source id: 8109d10e-f1dc-3318-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 8109d10e-f1dc-3318-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 6e769543-09d6-3f09-0000-000000000000
+  name: SetRetryCounterExecuteSQLRecord/success/checkRetryCounterExecuteSQLRecord
+  source id: cda06931-0827-336d-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 6975f9e8-073f-3bd6-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: a1949767-6a7d-3bf0-0000-000000000000
+  name: SetRetryCounterUploadToGcsHub/success/checkRetryCounterUploadToGcsHub
+  source id: 29eab4bf-a481-3a86-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 3f02b9b3-7f76-3525-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 10396812-d0f0-3dd9-0000-000000000000
+  name: SuppressActualData/failure/SuppressActualData
+  source id: 8ce7f7a6-93c1-3ea5-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 8ce7f7a6-93c1-3ea5-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 6f51962c-087e-3450-0000-000000000000
+  name: SuppressActualData/failure/SuppressActualData
+  source id: 934b9b14-a79f-33a0-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 934b9b14-a79f-33a0-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 9db49bcd-df93-39aa-0000-000000000000
+  name: SuppressActualData/failure/SuppressActualData
+  source id: ed6aca5f-81e2-30b7-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: ed6aca5f-81e2-30b7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: ad734279-a2e8-3b5c-0000-000000000000
+  name: SuppressActualData/success/LogSuccess
+  source id: 934b9b14-a79f-33a0-0000-000000000000
+  source relationship names:
+  - success
+  destination id: e9301c02-4464-37cf-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e7445828-0ed7-3c5a-0000-000000000000
+  name: SuppressActualData/success/Logfailed
+  source id: ed6aca5f-81e2-30b7-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 27db69eb-7e16-329f-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: fd2e2bd6-50f7-3be1-0000-000000000000
+  name: SuppressActualData/success/LogpubsubSuccess
+  source id: 8ce7f7a6-93c1-3ea5-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 61ba3bb2-5cd6-354f-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e171ac54-b969-3943-0000-000000000000
+  name: UpdateAttribute/success/createQuery
+  source id: fdb29d6b-f027-3bb1-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 291d8b37-c6e9-3544-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: c7bc811d-1785-3277-0000-000000000000
+  name: ZeroRecordEvent/success/Logfailed
+  source id: 7758a467-374e-3d90-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 27db69eb-7e16-329f-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: a039accb-bfba-3a48-0000-000000000000
+  name: checkRetryCounterExecuteSQLRecord/tryAgain/ExecuteSQLRecord
+  source id: 6975f9e8-073f-3bd6-0000-000000000000
+  source relationship names:
+  - tryAgain
+  destination id: 2aa6bea6-1995-3a64-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: f7e17848-7b6d-3e28-0000-000000000000
+  name: checkRetryCounterExecuteSQLRecord/tryAgain/failureStatusInfoRetryInprogress
+  source id: 6975f9e8-073f-3bd6-0000-000000000000
+  source relationship names:
+  - tryAgain
+  destination id: 83845f40-3dab-3d16-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: c11bc92f-af8a-3af8-0000-000000000000
+  name: checkRetryCounterExecuteSQLRecord/unmatched/failureStatusInfoRetryExeceeded
+  source id: 6975f9e8-073f-3bd6-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 9d8ba2f0-d75d-3313-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 35338b75-4d2b-319e-0000-000000000000
+  name: checkRetryCounterExecuteSQLRecord/unmatched/removeFileContent
+  source id: 6975f9e8-073f-3bd6-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 161d23f1-cf94-3f6e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 186164a0-fda5-355a-0000-000000000000
+  name: checkRetryCounterExecuteSQLRecord/unmatched/resetRetryCounterExecuteSQLRecord
+  source id: 6975f9e8-073f-3bd6-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 601e8890-4cfd-33a1-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 039d777e-94ba-318b-0000-000000000000
+  name: checkRetryCounterUploadToGcsHub/tryAgain/failureStatusInfoRetryInprogress
+  source id: 3f02b9b3-7f76-3525-0000-000000000000
+  source relationship names:
+  - tryAgain
+  destination id: bf789e36-6367-3cc3-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 5c731dea-a29f-3e4a-0000-000000000000
+  name: checkRetryCounterUploadToGcsHub/tryAgain/uploadToGcsHub
+  source id: 3f02b9b3-7f76-3525-0000-000000000000
+  source relationship names:
+  - tryAgain
+  destination id: 45a2d0ef-bc15-3182-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 3f74cb31-6861-3226-0000-000000000000
+  name: checkRetryCounterUploadToGcsHub/unmatched/failureStatusInfoRetryExeceeded
+  source id: 3f02b9b3-7f76-3525-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: f298544f-4ea8-3180-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: aa223e47-4705-3e74-0000-000000000000
+  name: checkRetryCounterUploadToGcsHub/unmatched/removeFileContent
+  source id: 3f02b9b3-7f76-3525-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 161d23f1-cf94-3f6e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 46ca60be-7d4a-352a-0000-000000000000
+  name: checkRetryCounterUploadToGcsHub/unmatched/resetRetryCounterUploadToGcsHub
+  source id: 3f02b9b3-7f76-3525-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: a6b6ca0f-4963-3e7c-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 2c3a3941-c785-3fa8-0000-000000000000
+  name: createQuery/success/prioritzeIngestionAndCaptureIngestion StartTime
+  source id: 291d8b37-c6e9-3544-0000-000000000000
+  source relationship names:
+  - success
+  destination id: b85c550a-ca74-3afc-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: a894d606-5be6-3d0d-0000-000000000000
+  name: encryptContent/failure/CaptureFailureEncryptEvent
+  source id: 14bb94d8-35c2-361b-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 55d63857-b629-38a3-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 8dc89c1a-6f54-342d-0000-000000000000
+  name: encryptContent/failure/removeFileContent
+  source id: 14bb94d8-35c2-361b-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 161d23f1-cf94-3f6e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 57fa2497-a1b0-3787-0000-000000000000
+  name: encryptContent/success/removeFileContent
+  source id: 14bb94d8-35c2-361b-0000-000000000000
+  source relationship names:
+  - success
+  destination id: aa7fd4b6-d51e-3c25-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 5f835cb4-6da9-3fb9-0000-000000000000
+  name: encryptContent/success/uploadToGcsHub
+  source id: 14bb94d8-35c2-361b-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 45a2d0ef-bc15-3182-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 59b114b9-20a0-37fb-0000-000000000000
+  name: failureStatusInfoRetryExeceeded/success/removeFileContent
+  source id: f298544f-4ea8-3180-0000-000000000000
+  source relationship names:
+  - success
+  destination id: e9a6adfe-e2d8-3642-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: d79ba178-a48a-338f-0000-000000000000
+  name: failureStatusInfoRetryExeceeded/success/removeFileContent
+  source id: 9d8ba2f0-d75d-3313-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 75767be6-2558-3a83-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: c1ef92cd-3551-3d51-0000-000000000000
+  name: failureStatusInfoRetryInprogress/success/removeFileContent
+  source id: bf789e36-6367-3cc3-0000-000000000000
+  source relationship names:
+  - success
+  destination id: e9a6adfe-e2d8-3642-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e8494ce4-3263-358f-0000-000000000000
+  name: failureStatusInfoRetryInprogress/success/removeFileContent
+  source id: 83845f40-3dab-3d16-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 75767be6-2558-3a83-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 7cc430dc-4f28-3599-0000-000000000000
+  name: nonVarcharNonDateCols/matched/FetchDateCols
+  source id: af3b4c13-b6f9-3419-0000-000000000000
+  source relationship names:
+  - matched
+  - unmatched
+  destination id: 426c179c-f87d-3cb8-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: a985a2c3-1f29-3018-0000-000000000000
+  name: onlyDateCols/matched/RouteOnAttribute
+  source id: 004f40c3-32da-33c7-0000-000000000000
+  source relationship names:
+  - matched
+  - unmatched
+  destination id: 8109d10e-f1dc-3318-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 63b841a7-c840-3177-0000-000000000000
+  name: prioritzeIngestionAndCaptureIngestion StartTime/success/ExecuteSQLRecord
+  source id: b85c550a-ca74-3afc-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 2aa6bea6-1995-3a64-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 1d991598-d52d-3cb6-0000-000000000000
+  name: removeFileContent/failure/removeFileContent
+  source id: e9a6adfe-e2d8-3642-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: e9a6adfe-e2d8-3642-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 46283c12-11cc-364c-0000-000000000000
+  name: removeFileContent/failure/removeFileContent
+  source id: 3430b392-b63e-34bf-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 3430b392-b63e-34bf-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 4aac235d-bdb4-3edf-0000-000000000000
+  name: removeFileContent/failure/removeFileContent
+  source id: 161d23f1-cf94-3f6e-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 161d23f1-cf94-3f6e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 6281e80b-d1b6-30be-0000-000000000000
+  name: removeFileContent/failure/removeFileContent
+  source id: fbacfdad-34d5-3c49-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: fbacfdad-34d5-3c49-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 8ba1a6ed-25c9-3df6-0000-000000000000
+  name: removeFileContent/failure/removeFileContent
+  source id: aa7fd4b6-d51e-3c25-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: aa7fd4b6-d51e-3c25-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: f513465a-fa04-3a6f-0000-000000000000
+  name: removeFileContent/failure/removeFileContent
+  source id: 75767be6-2558-3a83-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 75767be6-2558-3a83-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 4248ea39-5a08-36d4-0000-000000000000
+  name: removeFileContent/success/CreateAuditEntry
+  source id: 75767be6-2558-3a83-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ee310d4b-0960-301e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 4e7485d4-a0e7-36f8-0000-000000000000
+  name: removeFileContent/success/CreateAuditEntry
+  source id: e9a6adfe-e2d8-3642-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ee310d4b-0960-301e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 202fc696-ff4b-3246-0000-000000000000
+  name: removeFileContent/success/MergeSplitsForEventGeneration
+  source id: 79608381-0508-3e39-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ebd16567-77e7-31ae-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: f276f760-dae8-3e4d-0000-000000000000
+  name: removeFileContent/success/PublishEncryptEvent
+  source id: aa7fd4b6-d51e-3c25-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 7e255ef2-5403-32f7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: ea07e3f4-bbbe-32fe-0000-000000000000
+  name: removeFileContent/success/PublishEventName
+  source id: 3430b392-b63e-34bf-0000-000000000000
+  source relationship names:
+  - success
+  destination id: a9b554d3-9f11-31c7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: eb526419-f656-3e65-0000-000000000000
+  name: removeFileContent/success/PublishEventName
+  source id: fbacfdad-34d5-3c49-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 0d37dc10-0bca-39b1-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: ae7a1437-0188-3d81-0000-000000000000
+  name: removeFileContent/success/PublishEventSplit
+  source id: 05a8dd9e-5927-3f14-0000-000000000000
+  source relationship names:
+  - success
+  destination id: f3c61bb6-3e75-3e50-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 59cdcfa5-bd8d-32ab-0000-000000000000
+  name: removeFileContent/success/routeToTriggerForSplitOrUnsplitFiles
+  source id: fbacfdad-34d5-3c49-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 69e264e6-2533-3c3e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: fa73c1eb-6fee-3f7b-0000-000000000000
+  name: removeFileContent/success/routeToTriggerForSplitOrUnsplitFiles
+  source id: 161d23f1-cf94-3f6e-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 69e264e6-2533-3c3e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 2 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 20d70ab2-3240-38eb-0000-000000000000
+  name: routeTheFileBasedOnSize/split_file/splitLargeFiles
+  source id: 8ace45f5-fbd4-3de4-0000-000000000000
+  source relationship names:
+  - split_file
+  destination id: 9492020c-3efb-3ca0-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 90009e7e-e111-3f26-0000-000000000000
+  name: routeTheFileBasedOnSize/unmatched/removeFileContent
+  source id: 8ace45f5-fbd4-3de4-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 05a8dd9e-5927-3f14-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 9de2122d-b38a-37a2-0000-000000000000
+  name: routeTheFileBasedOnSize/unmatched/updateFilename
+  source id: 8ace45f5-fbd4-3de4-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 24afe08d-1faf-30d7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 7c5a5f14-da48-3fa0-0000-000000000000
+  name: routeToTriggerForSplitOrUnsplitFiles/split/MergeSplitsForTriggerGeneration
+  source id: 69e264e6-2533-3c3e-0000-000000000000
+  source relationship names:
+  - split
+  destination id: 8dc75a82-0842-3879-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 82d8b997-8cc0-3fa3-0000-000000000000
+  name: routeToTriggerForSplitOrUnsplitFiles/unmatched/updateTriggerFileAndFolderName
+  source id: 69e264e6-2533-3c3e-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: cf10b8f5-99d6-3de4-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 4aee1927-fdbc-3baf-0000-000000000000
+  name: routeZeroRecordFile/unmatched/removeFileContent
+  source id: 2596106c-f5ad-3635-0000-000000000000
+  source relationship names:
+  - unmatched
+  destination id: 3430b392-b63e-34bf-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: b2ebc35c-34a4-3f5e-0000-000000000000
+  name: routeZeroRecordFile/zero_record/ZeroRecordEvent
+  source id: 2596106c-f5ad-3635-0000-000000000000
+  source relationship names:
+  - zero_record
+  destination id: 7758a467-374e-3d90-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: efcc8e77-46b0-3ed9-0000-000000000000
+  name: routeZeroRecordFile/zero_record/routeToTriggerForSplitOrUnsplitFiles
+  source id: 2596106c-f5ad-3635-0000-000000000000
+  source relationship names:
+  - zero_record
+  destination id: 69e264e6-2533-3c3e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 0dd7945c-30d9-39d6-0000-000000000000
+  name: splitLargeFiles/failure/PublishEventSplitFailure
+  source id: 9492020c-3efb-3ca0-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 8e489f80-d508-37a3-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: c1990d1b-a9ee-364d-0000-000000000000
+  name: splitLargeFiles/failure/removeFileContent
+  source id: 9492020c-3efb-3ca0-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 161d23f1-cf94-3f6e-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: cf65ba09-acd4-3d4f-0000-000000000000
+  name: splitLargeFiles/splits/removeFileContent
+  source id: 9492020c-3efb-3ca0-0000-000000000000
+  source relationship names:
+  - splits
+  destination id: 79608381-0508-3e39-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: b6b285b0-34e4-3e83-0000-000000000000
+  name: splitLargeFiles/splits/updateFilename
+  source id: 9492020c-3efb-3ca0-0000-000000000000
+  source relationship names:
+  - splits
+  destination id: 24afe08d-1faf-30d7-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 09c9d71c-5eb5-3282-0000-000000000000
+  name: updateFilename/success/encryptContent
+  source id: 24afe08d-1faf-30d7-0000-000000000000
+  source relationship names:
+  - success
+  destination id: 14bb94d8-35c2-361b-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: e4d6cd7c-1aaa-3883-0000-000000000000
+  name: updateTriggerFileAndFolderName/success/uploadToGcsTrigger
+  source id: cf10b8f5-99d6-3de4-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ab1a203d-8ce4-33ad-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: fab55853-2277-3ef4-0000-000000000000
+  name: uploadToGcsHub/failure/SetRetryCounterUploadToGcsHub
+  source id: 45a2d0ef-bc15-3182-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: 29eab4bf-a481-3a86-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 10 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 1252ca0f-b58d-35c4-0000-000000000000
+  name: uploadToGcsHub/success/removeFileContent
+  source id: 45a2d0ef-bc15-3182-0000-000000000000
+  source relationship names:
+  - success
+  destination id: fbacfdad-34d5-3c49-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+- id: 5d226c68-9ad6-3e66-0000-000000000000
+  name: uploadToGcsTrigger/failure/uploadToGcsTrigger
+  source id: ab1a203d-8ce4-33ad-0000-000000000000
+  source relationship names:
+  - failure
+  destination id: ab1a203d-8ce4-33ad-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+Remote Process Groups: []
+NiFi Properties Overrides: {}
